@@ -1,0 +1,5 @@
+initializr:
+  statistics:
+    elastic:
+      job:
+        input: file://${user.home}/workspace/input/full/*.log
