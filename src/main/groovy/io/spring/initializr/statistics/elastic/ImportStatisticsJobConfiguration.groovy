@@ -42,10 +42,10 @@ class ImportStatisticsJobConfiguration {
 
 	@Bean
 	public Step step1(StepBuilderFactory stepBuilderFactory,
-					  ItemProcessor<LogEntry, String> processor,
-					  ItemWriter<String> writer) {
+					  ItemProcessor<LogEntry, ProjectRequestDocument> processor,
+					  ItemWriter<ProjectRequestDocument> writer) {
 		return stepBuilderFactory.get("step1")
-				.<LogEntry, String> chunk(10)
+				.<LogEntry, ProjectRequestDocument> chunk(10)
 				.reader(reader())
 				.processor(processor)
 				.writer(writer)
@@ -54,6 +54,9 @@ class ImportStatisticsJobConfiguration {
 
 	@Bean
 	ItemReader<LogEntry> reader() {
+		if (!this.properties.job.input) {
+			throw new IllegalStateException("No log input provided, please check your configuration.")
+		}
 		def reader = new FlatFileItemReader<LogEntry>()
 
 

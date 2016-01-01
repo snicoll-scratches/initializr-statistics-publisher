@@ -1,0 +1,5 @@
+initializr:
+  statistics:
+    elastic:
+      job:
+        input: classpath:/input/simple.log

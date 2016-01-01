@@ -1,9 +1,12 @@
 package io.spring.initializr.statistics.elastic
 
+import groovy.transform.ToString
+
 /**
  *
  * @author Stephane Nicoll
  */
+@ToString(ignoreNulls = true, includePackage = false, includeNames = true)
 class ProjectRequestDocument {
 
 	long generationTimestamp

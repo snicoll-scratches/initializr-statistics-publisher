@@ -1,32 +1,17 @@
 package io.spring.initializr.statistics.elastic
 
 import io.spring.initializr.generator.ProjectRequest
-import io.spring.initializr.metadata.InitializrMetadata
-import io.spring.initializr.metadata.InitializrMetadataProvider
 import io.spring.initializr.statistics.ProjectGenerationStatistics
-import io.spring.initializr.test.InitializrMetadataTestBuilder
 import org.junit.Test
 
 /**
  *
  * @author Stephane Nicoll
  */
-class ProjectRequestDocumentSerializerTest {
+class ProjectRequestDocumentSerializerTest extends AbstractElasticTest {
 
 	@Test
 	void simpleTest() {
-		def metadata = InitializrMetadataTestBuilder
-				.withDefaults()
-				.addDependencyGroup('core', 'web', 'data-jpa', 'security')
-				.addDependencyGroup('database', 'h2')
-				.build()
-
-		def provider = new InitializrMetadataProvider() {
-			@Override
-			InitializrMetadata get() {
-				return metadata
-			}
-		}
 
 		ProjectRequestDocumentSerializer publisher = new ProjectRequestDocumentSerializer(provider)
 
