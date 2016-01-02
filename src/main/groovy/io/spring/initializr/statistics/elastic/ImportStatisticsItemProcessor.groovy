@@ -18,7 +18,9 @@ import org.springframework.web.util.UriComponentsBuilder
 @Slf4j
 class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRequestDocument> {
 
-	public static final String GET_STARTER = "GET /starter.zip"
+	static final String GET_STARTER = "GET /starter.zip"
+	static final String POST_STARTER_TGZ = 'POST /starter.tgz'
+
 	private final InitializrMetadataProvider metadataProvider
 
 	@Autowired
@@ -67,11 +69,11 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 		document.groupId = params.getFirst('groupId') ?: metadata.groupId.content
 		document.artifactId = params.getFirst('artifactId') ?: metadata.artifactId.content
 		document.packageName = params.getFirst('packageName') ?: metadata.packageName.content
-		document.bootVersion = params.getFirst('bootVersion') ?: metadata.bootVersions.getDefault()
-		document.javaVersion = params.getFirst('javaVersion') ?: metadata.javaVersions.getDefault()
-		document.language = params.getFirst('language') ?: metadata.languages.getDefault()
-		document.packaging = params.getFirst('packaging') ?: metadata.packagings.getDefault()
-		document.type = params.getFirst('type') ?: metadata.types.getDefault()
+		document.bootVersion = params.getFirst('bootVersion') ?: metadata.bootVersions.getDefault().id
+		document.javaVersion = params.getFirst('javaVersion') ?: metadata.javaVersions.getDefault().id
+		document.language = params.getFirst('language') ?: metadata.languages.getDefault().id
+		document.packaging = params.getFirst('packaging') ?: metadata.packagings.getDefault().id
+		document.type = params.getFirst('type') ?: metadata.types.getDefault().id
 
 		def dependencies = []
 		dependencies.addAll(params.get('style') ?: [])
@@ -88,14 +90,23 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 		if (entry.contains(GET_STARTER)) {
 			int index = entry.indexOf(GET_STARTER)
 			String tmp = entry.substring(index + 4, entry.size())
-			int closingIndex = tmp.indexOf("\"")
-			tmp = tmp.substring(0, closingIndex)
-			// TODO
-			if (tmp.endsWith(' HTTP/1.1')) {
-				tmp = tmp.substring(0, tmp.length() - ' HTTP/1.1'.length())
-			}
-			return tmp
+			return cleanUrlSuffix(tmp)
+		}
+		if (entry.contains(POST_STARTER_TGZ)) {
+			int index = entry.indexOf(POST_STARTER_TGZ)
+			String tmp = entry.substring(index + 4, entry.size())
+			return cleanUrlSuffix(tmp)
 		}
 		return null
+	}
+
+	private static String cleanUrlSuffix(String url) {
+		int closingIndex = url.indexOf("\"")
+		url = url.substring(0, closingIndex)
+		// TODO
+		if (url.endsWith(' HTTP/1.1')) {
+			url = url.substring(0, url.length() - ' HTTP/1.1'.length())
+		}
+		return url
 	}
 }
