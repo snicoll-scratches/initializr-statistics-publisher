@@ -1,9 +1,12 @@
 package io.spring.initializr.statistics.elastic
 
-import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 import groovy.util.logging.Slf4j
 import io.spring.initializr.metadata.InitializrMetadataProvider
+import io.spring.initializr.statistics.DefaultValueResolver
 
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,13 +21,18 @@ import org.springframework.web.util.UriComponentsBuilder
 @Slf4j
 class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRequestDocument> {
 
-	static final String GET_STARTER = "GET /starter.zip"
+	static final String GET_STARTER = 'GET /starter.zip'
+	static final String GET_POM = 'GET /pom.xml'
+	static final String GET_GRADLE_BUILD = 'GET /build.gradle'
 	static final String POST_STARTER_TGZ = 'POST /starter.tgz'
 
+	private final DefaultValueResolver valueResolver
 	private final InitializrMetadataProvider metadataProvider
 
 	@Autowired
-	ImportStatisticsItemProcessor(InitializrMetadataProvider metadataProvider) {
+	ImportStatisticsItemProcessor(DefaultValueResolver defaultValueResolver,
+								  InitializrMetadataProvider metadataProvider) {
+		this.valueResolver = defaultValueResolver
 		this.metadataProvider = metadataProvider
 	}
 
@@ -50,54 +58,90 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 	}
 
 	private ProjectRequestDocument processEntry(LogEntry logEntry, String url) {
-		ProjectRequestDocument document = new ProjectRequestDocument()
-		applyTimestamp(document, logEntry.timestamp)
-		applyProjectSettings(document, url)
-		return document
-	}
-
-	private void applyTimestamp(ProjectRequestDocument document, String timestamp) {
-		Date date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(timestamp);
-		document.generationTimestamp = date.getTime()
-	}
-
-	private void applyProjectSettings(ProjectRequestDocument document, String url) {
 		def metadata = metadataProvider.get()
+		ProjectRequestDocument document = new ProjectRequestDocument()
 
+
+		LocalDateTime timestamp = LocalDateTime.parse(
+				logEntry.timestamp, DateTimeFormatter.ISO_DATE_TIME)
+		document.generationTimestamp = timestamp.toInstant(ZoneOffset.UTC).toEpochMilli()
 		def builder = UriComponentsBuilder.fromUriString(url).build()
 		def params = builder.getQueryParams()
-		document.groupId = params.getFirst('groupId') ?: metadata.groupId.content
-		document.artifactId = params.getFirst('artifactId') ?: metadata.artifactId.content
-		document.packageName = params.getFirst('packageName') ?: metadata.packageName.content
-		document.bootVersion = params.getFirst('bootVersion') ?: metadata.bootVersions.getDefault().id
-		document.javaVersion = params.getFirst('javaVersion') ?: metadata.javaVersions.getDefault().id
-		document.language = params.getFirst('language') ?: metadata.languages.getDefault().id
-		document.packaging = params.getFirst('packaging') ?: metadata.packagings.getDefault().id
-		document.type = params.getFirst('type') ?: metadata.types.getDefault().id
+
+		document.groupId = params.getFirst('groupId') ?: valueResolver.getDefaultGroupId(timestamp)
+		document.artifactId = params.getFirst('artifactId') ?: valueResolver.getDefaultArtifactId(timestamp)
+		document.packageName = params.getFirst('packageName') ?: valueResolver.getDefaultPackageName(timestamp)
+		document.bootVersion = params.getFirst('bootVersion') ?: valueResolver.getDefaultBootVersion(timestamp)
+
+		def javaVersion = params.getFirst('javaVersion')
+		if (javaVersion && !metadata.javaVersions.get(javaVersion)) {
+			log.warn("Invalid java version '$javaVersion' from $logEntry.entry")
+		}
+		document.javaVersion = javaVersion ?: valueResolver.getDefaultJavaVersion(timestamp)
+
+		def language = params.getFirst('language')
+		if (language && !metadata.languages.get(language)) {
+			log.warn("Invalid language '$language' from $logEntry.entry")
+		}
+		document.language = language ?: valueResolver.getDefaultLanguage(timestamp)
+
+		def packaging = params.getFirst('packaging')
+		if (packaging && !metadata.packagings.get(packaging)) {
+			log.warn("Invalid packaging '$packaging' from $logEntry.entry")
+		}
+		document.packaging = packaging ?: valueResolver.getDefaultPackaging(timestamp)
+
+		def type = params.getFirst('type')
+		if (type && !metadata.types.get(type)) {
+			log.warn("Invalid type '$type' from $logEntry.entry")
+		}
+		document.type = type ?: valueResolver.getDefaultType(timestamp)
+
 
 		def dependencies = []
-		dependencies.addAll(params.get('style') ?: [])
-		dependencies.addAll(params.get('dependencies') ?: [])
+		dependencies.addAll(cleanDependenciesParam(params.get('style')))
+		dependencies.addAll(cleanDependenciesParam(params.get('dependencies')))
 		dependencies.each {
 			if (metadata.dependencies.get(it)) {
 				document.dependencies << it
+			} else {
+				log.warn("Unknown dependency '$it' from $logEntry.entry")
 			}
 		}
+		document
+	}
 
+	private static Collection<String> cleanDependenciesParam(List<String> value) {
+		List<String> result = []
+		if (value) {
+			value.forEach {
+				def dep = URLDecoder.decode(it, 'UTF-8')
+				result.addAll(dep.split(','))
+			}
+		}
+		result.unique()
 	}
 
 	private static String extractUrl(String entry) {
 		if (entry.contains(GET_STARTER)) {
-			int index = entry.indexOf(GET_STARTER)
-			String tmp = entry.substring(index + 4, entry.size())
-			return cleanUrlSuffix(tmp)
+			return extractUrl(entry, GET_STARTER)
+		}
+		if (entry.contains(GET_POM)) {
+			return extractUrl(entry, GET_POM)
+		}
+		if (entry.contains(GET_GRADLE_BUILD)) {
+			return extractUrl(entry, GET_GRADLE_BUILD)
 		}
 		if (entry.contains(POST_STARTER_TGZ)) {
-			int index = entry.indexOf(POST_STARTER_TGZ)
-			String tmp = entry.substring(index + 4, entry.size())
-			return cleanUrlSuffix(tmp)
+			return extractUrl(entry, POST_STARTER_TGZ)
 		}
 		return null
+	}
+
+	private static String extractUrl(String entry, String prefix) {
+		int index = entry.indexOf(prefix)
+		String tmp = entry.substring(index + 4, entry.size())
+		return cleanUrlSuffix(tmp)
 	}
 
 	private static String cleanUrlSuffix(String url) {
@@ -109,4 +153,5 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 		}
 		return url
 	}
+
 }
