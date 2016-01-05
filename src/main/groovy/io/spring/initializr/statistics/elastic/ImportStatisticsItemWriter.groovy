@@ -25,7 +25,7 @@ class ImportStatisticsItemWriter implements ItemWriter<ProjectRequestDocument> {
 	void write(List<? extends ProjectRequestDocument> list) throws Exception {
 		list.each {
 			String json = serializer.toJson(it)
-			restTemplate.postForObject('http://localhost:9200/intializr/request', json, String)
+			restTemplate.postForObject('http://localhost:9200/initializr/request', json, String)
 		}
 
 	}

@@ -46,7 +46,7 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 				try {
 					return processEntry(logEntry, url)
 				} catch (Exception ex) {
-					throw new IllegalArgumentException("Failed to process entry with url $url", ex)
+					throw new IllegalArgumentException("Failed to process entry $logEntry.entry", ex)
 				}
 			} else {
 				if (log.isTraceEnabled()) {

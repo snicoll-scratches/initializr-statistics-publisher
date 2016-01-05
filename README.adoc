@@ -1,0 +1,52 @@
+= Initializr Statistics Publisher
+
+This simple app parses Papertrail logs and fills an ElasticSearch index
+with each project generation request.
+
+== Retrieving the logs
+
+You can download the logs using the following command:
+
+```
+PT_TOKEN=
+NR_DAYS=2
+seq 0 $NR_DAYS | xargs -I {} date -u -v-{}d +%Y-%m-%d | \
+    xargs -I {} curl --progress-bar -f --no-include -o {}.tsv.gz \
+    -L -H "X-Papertrail-Token: $PT_TOKEN" https://papertrailapp.com/api/v1/archives/{}/download
+```
+
+[NOTE]
+====
+Make sure to set the `PT_TOKEN` property with your
+https://papertrailapp.com/user/edit[Papertrail HTTP API key]. The `NR_DAYS` property
+defines the number of day archives to download.
+====
+
+Once you've done that, make sure to unzip the archives first:
+
+```
+gunzip *.gz
+```
+
+== Preparing the ElasticSearch index
+
+Create an index for the documents you're about to push
+
+```
+curl -XPUT 'http://localhost:9200/initializr/'
+```
+
+== Parsing the logs
+
+You can run the app right from your IDE or on the command-line. Regardless of what
+you chose make sure to set the `initializr.statistics.elastic.job.input` property.
+
+For instance, if the logs are located in the `foo` directory of your home directory,
+add the following argument:
+
+```
+--initializr.statistics.elastic.job.input=file://${user.home}/foo/*.tsv
+```
+
+NOTE: You need a local ElasticSearch instance on your box for now. If you don't
+want to use ElasticSearch at all, you can comment some code in `ImportStatisticsItemWriter`.
