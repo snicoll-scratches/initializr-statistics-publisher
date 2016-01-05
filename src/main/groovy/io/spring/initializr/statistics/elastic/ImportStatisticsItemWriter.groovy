@@ -9,13 +9,11 @@ import org.springframework.web.client.RestTemplate
  *
  * @author Stephane Nicoll
  */
-@Component
 class ImportStatisticsItemWriter implements ItemWriter<ProjectRequestDocument> {
 
 	private final ProjectRequestDocumentSerializer serializer
 	private final RestTemplate restTemplate
 
-	@Autowired
 	ImportStatisticsItemWriter(ProjectRequestDocumentSerializer serializer) {
 		this.serializer = serializer
 		this.restTemplate = new RestTemplate()

@@ -9,15 +9,12 @@ import io.spring.initializr.metadata.InitializrMetadataProvider
 import io.spring.initializr.statistics.DefaultValueResolver
 
 import org.springframework.batch.item.ItemProcessor
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import org.springframework.web.util.UriComponentsBuilder
 
 /**
  *
  * @author Stephane Nicoll
  */
-@Component
 @Slf4j
 class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRequestDocument> {
 
@@ -29,7 +26,6 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 	private final DefaultValueResolver valueResolver
 	private final InitializrMetadataProvider metadataProvider
 
-	@Autowired
 	ImportStatisticsItemProcessor(DefaultValueResolver defaultValueResolver,
 								  InitializrMetadataProvider metadataProvider) {
 		this.valueResolver = defaultValueResolver

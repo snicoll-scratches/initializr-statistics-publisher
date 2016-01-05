@@ -1,23 +1,32 @@
 package io.spring.initializr.statistics.elastic
 
+import io.spring.initializr.metadata.InitializrMetadataProvider
+import io.spring.initializr.statistics.DefaultValueResolver
+
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory
+import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.launch.support.RunIdIncrementer
+import org.springframework.batch.core.partition.support.MultiResourcePartitioner
+import org.springframework.batch.core.partition.support.Partitioner
+import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
 import org.springframework.batch.item.file.FlatFileItemReader
-import org.springframework.batch.item.file.MultiResourceItemReader
 import org.springframework.batch.item.file.mapping.DefaultLineMapper
 import org.springframework.batch.item.file.mapping.FieldSetMapper
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer
 import org.springframework.batch.item.file.transform.FieldSet
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.Resource
+import org.springframework.core.task.SimpleAsyncTaskExecutor
 import org.springframework.validation.BindException
 
 /**
@@ -31,32 +40,65 @@ class ImportStatisticsJobConfiguration {
 	@Autowired
 	private ImportStatisticsJobProperties properties
 
+	@Autowired
+	private InitializrMetadataProvider metadataProvider
+
+	@Autowired
+	private DefaultValueResolver valueResolver
+
+	@Autowired
+	private ProjectRequestDocumentSerializer documentSerializer
+
+	@Autowired
+	private StepBuilderFactory stepBuilder
+
 	@Bean
-	public Job importStatisticsJob(JobBuilderFactory jobs, Step step1) {
+	public Job importStatisticsJob(JobBuilderFactory jobs, ItemReader<LogEntry> reader) {
 		return jobs.get("importStatisticsJob")
 				.incrementer(new RunIdIncrementer())
-				.flow(step1)
-				.end()
+				.start(partitionStep(reader))
 				.build();
 	}
 
 	@Bean
-	public Step step1(StepBuilderFactory stepBuilderFactory,
-					  ItemProcessor<LogEntry, ProjectRequestDocument> processor,
-					  ItemWriter<ProjectRequestDocument> writer) {
-		return stepBuilderFactory.get("step1")
+	public Step partitionStep(ItemReader<LogEntry> reader) {
+		TaskExecutorPartitionHandler partitionHandler = new TaskExecutorPartitionHandler();
+
+		partitionHandler.setTaskExecutor(new SimpleAsyncTaskExecutor());
+		partitionHandler.setStep(step1(reader));
+
+		partitionHandler.afterPropertiesSet();
+
+		return stepBuilder.get("partitionStep")
+				.partitioner("step1", partitioner())
+				.partitionHandler(partitionHandler)
+				.gridSize(16)
+				.build();
+	}
+
+	@Bean
+	public Step step1(ItemReader<LogEntry> reader) {
+		return stepBuilder.get("step1")
 				.<LogEntry, ProjectRequestDocument> chunk(10)
-				.reader(reader())
-				.processor(processor)
-				.writer(writer)
+				.reader(reader)
+				.processor(processor())
+				.writer(writer())
 				.build();
 	}
 
 	@Bean
-	ItemReader<LogEntry> reader() {
+	public Partitioner partitioner() {
 		if (!this.properties.job.input) {
 			throw new IllegalStateException("No log input provided, please check your configuration.")
 		}
+		MultiResourcePartitioner partitioner = new MultiResourcePartitioner();
+		partitioner.setResources(this.properties.job.input);
+		return partitioner;
+	}
+
+	@Bean
+	@StepScope
+	FlatFileItemReader<LogEntry> reader(@Value("#{stepExecutionContext['fileName']}") Resource resource) {
 		def reader = new FlatFileItemReader<LogEntry>()
 
 
@@ -73,11 +115,18 @@ class ImportStatisticsJobConfiguration {
 			}
 		})
 		reader.setLineMapper(mapper)
+		reader.setResource(resource)
+		reader
+	}
 
-		def wrapper = new MultiResourceItemReader<LogEntry>()
-		wrapper.setDelegate(reader)
-		wrapper.setResources(this.properties.job.input)
-		wrapper
+	@Bean
+	ItemProcessor<LogEntry, ProjectRequestDocument> processor() {
+		new ImportStatisticsItemProcessor(valueResolver, metadataProvider)
+	}
+
+	@Bean
+	ItemWriter<ProjectRequestDocument> writer() {
+		new ImportStatisticsItemWriter(documentSerializer)
 	}
 
 }
