@@ -75,24 +75,32 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 
 		def javaVersion = params.getFirst('javaVersion')
 		if (javaVersion && !metadata.javaVersions.get(javaVersion)) {
+			document.invalid = true
+			document.invalidJavaVersion = true
 			log.warn("Invalid java version '$javaVersion' from $logEntry.entry")
 		}
 		document.javaVersion = javaVersion ?: valueResolver.getDefaultJavaVersion(timestamp)
 
 		def language = params.getFirst('language')
 		if (language && !metadata.languages.get(language)) {
+			document.invalid = true
+			document.invalidLanguage = true
 			log.warn("Invalid language '$language' from $logEntry.entry")
 		}
 		document.language = language ?: valueResolver.getDefaultLanguage(timestamp)
 
 		def packaging = params.getFirst('packaging')
 		if (packaging && !metadata.packagings.get(packaging)) {
+			document.invalid = true
+			document.invalidPackaging = true
 			log.warn("Invalid packaging '$packaging' from $logEntry.entry")
 		}
 		document.packaging = packaging ?: valueResolver.getDefaultPackaging(timestamp)
 
 		def type = params.getFirst('type')
 		if (type && !metadata.types.get(type)) {
+			document.invalid = true
+			document.invalidType = true
 			log.warn("Invalid type '$type' from $logEntry.entry")
 		}
 		document.type = type ?: valueResolver.getDefaultType(timestamp)
@@ -105,6 +113,8 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 			if (metadata.dependencies.get(it)) {
 				document.dependencies << it
 			} else {
+				document.invalid = true
+				document.invalidDependencies << it
 				log.warn("Unknown dependency '$it' from $logEntry.entry")
 			}
 		}
@@ -115,8 +125,10 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 		List<String> result = []
 		if (value) {
 			value.forEach {
-				def dep = URLDecoder.decode(it, 'UTF-8')
-				result.addAll(dep.split(','))
+				if (it) {
+					def dep = URLDecoder.decode(it, 'UTF-8')
+					result.addAll(dep.split(','))
+				}
 			}
 		}
 		result.unique()

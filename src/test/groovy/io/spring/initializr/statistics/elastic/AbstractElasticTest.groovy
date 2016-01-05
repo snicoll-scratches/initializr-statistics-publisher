@@ -12,7 +12,7 @@ abstract class AbstractElasticTest {
 
 	def metadata = InitializrMetadataTestBuilder
 			.withDefaults()
-			.addDependencyGroup('core', 'security', 'lombok', 'test')
+			.addDependencyGroup('core', 'security', 'lombok', 'test', 'aop')
 			.addDependencyGroup('web', 'web', 'data-rest', 'jersey')
 			.addDependencyGroup('data', 'data-jpa', 'jdbc')
 			.addDependencyGroup('database', 'h2', 'mysql')

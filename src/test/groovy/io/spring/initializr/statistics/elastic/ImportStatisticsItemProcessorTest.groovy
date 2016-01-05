@@ -68,7 +68,7 @@ class ImportStatisticsItemProcessorTest extends AbstractElasticTest {
 	}
 
 	@Test
-	void parseBuildGradle() {
+	void parseGradleBuild() {
 		def document = process('2015-12-29T19:40:16Z',
 				'start.spring.io - [29/12/2015:19:40:16 +0000] "GET /build.gradle?&dependencies=h2&dependencies=data-rest&type=gradle-build&packaging=jar&javaVersion=1.8&language=java&bootVersion=1.3.1.RELEASE&groupId=com.vblazhnov.stats&artifactId=stats&name=stats&description=Statistics+collect&packageName=com.vblazhnov.stats HTTP/1.1" 200 0 921 "-" "IntelliJ IDEA (Minerva)" 10.10.2.247:2941 x_forwarded_for:"145.255.2.192, 141.101.80.79" x_forwarded_proto:"https" vcap_request_id:46205cf2-8d24-47e0-72f6-4657331beeed response_time:0.037459673 app_id:b017e0be-2460-49fe-b986-7377eb773926')
 
@@ -94,8 +94,26 @@ class ImportStatisticsItemProcessorTest extends AbstractElasticTest {
 		assertEquals '1.8', document.javaVersion
 		assertEquals 'java', document.language
 		assertEquals 'com.x.service', document.packaging
+		assertEquals true, document.invalid
+		assertEquals true, document.invalidPackaging
 		assertEquals 'maven-project', document.type
 		assertDependencies(['jersey', 'jdbc', 'mysql', 'test', 'lombok'], document.dependencies)
+	}
+
+	@Test
+	void decodeExtraStyleParam() {
+		def document = process('2015-12-23T11:42:12Z',
+				'start.spring.io - [23/12/2015:11:42:12 +0000] "GET /starter.zip?type=maven-project&bootVersion=1.3.1.RELEASE&baseDir=ris&groupId=com.hsw&artifactId=ris&name=ris&description=ris&packageName=com.hsw&packaging=jar&javaVersion=1.8&language=java&autocomplete=&generate-project=&style=aop&style HTTP/1.1" 500 0 184 "http://start.spring.io/" "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)" 10.10.2.60:48104 x_forwarded_for:"220.181.126.92, 188.114.106.155" x_forwarded_proto:"http" vcap_request_id:75c644d6-4de5-483e-57ab-e4b38bfa533f response_time:0.101778597 app_id:b017e0be-2460-49fe-b986-7377eb773926')
+
+		assertEquals 'com.hsw', document.groupId
+		assertEquals 'ris', document.artifactId
+		assertEquals 'com.hsw', document.packageName
+		assertEquals '1.3.1.RELEASE', document.bootVersion
+		assertEquals '1.8', document.javaVersion
+		assertEquals 'java', document.language
+		assertEquals 'jar', document.packaging
+		assertEquals 'maven-project', document.type
+		assertDependencies(['aop'], document.dependencies)
 	}
 
 	ProjectRequestDocument process(String timestamp, String log) {

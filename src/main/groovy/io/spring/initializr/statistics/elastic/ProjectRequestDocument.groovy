@@ -20,5 +20,12 @@ class ProjectRequestDocument {
 	String type
 	final List<String> dependencies = []
 
+	boolean invalid
+	boolean invalidJavaVersion
+	boolean invalidLanguage
+	boolean invalidPackaging
+	boolean invalidType
+	final List<String> invalidDependencies = []
+
 
 }
