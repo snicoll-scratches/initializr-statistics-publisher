@@ -1,0 +1,3 @@
+{
+  "index.analysis.analyzer.packagename.tokenizer": "lowercase"
+}

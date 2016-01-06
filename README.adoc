@@ -33,7 +33,8 @@ gunzip *.gz
 Create an index for the documents you're about to push
 
 ```
-curl -XPUT 'http://localhost:9200/initializr/'
+$ cd util
+$ ./configure-index.sh http://localhost:9200 initializr
 ```
 
 == Parsing the logs
