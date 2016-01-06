@@ -11,6 +11,9 @@ import io.spring.initializr.statistics.DefaultValueResolver
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.web.util.UriComponentsBuilder
 
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
 /**
  *
  * @author Stephane Nicoll
@@ -18,6 +21,8 @@ import org.springframework.web.util.UriComponentsBuilder
 @Slf4j
 class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRequestDocument> {
 
+	static final String X_FORWARDED_FOR = 'x_forwarded_for:"'
+	static final IP_PATTERN = Pattern.compile("[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*")
 	static final String GET_STARTER = 'GET /starter.zip'
 	static final String GET_POM = 'GET /pom.xml'
 	static final String GET_GRADLE_BUILD = 'GET /build.gradle'
@@ -61,6 +66,7 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 		LocalDateTime timestamp = LocalDateTime.parse(
 				logEntry.timestamp, DateTimeFormatter.ISO_DATE_TIME)
 		document.generationTimestamp = timestamp.toInstant(ZoneOffset.UTC).toEpochMilli()
+		document.requestIp = extractRequestIp(logEntry.entry)
 		def builder = UriComponentsBuilder.fromUriString(url).build()
 		def params = builder.getQueryParams()
 
@@ -128,6 +134,20 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 			}
 		}
 		result.unique()
+	}
+
+	private static String extractRequestIp(String entry) {
+		int start = entry.indexOf(X_FORWARDED_FOR) + X_FORWARDED_FOR.length()
+		int end = entry.indexOf('\"', start)
+		// only matches IPv4 addresses
+		String ips = entry.substring(start, end)
+		Matcher matcher = IP_PATTERN.matcher(ips)
+		if(matcher.find()) {
+			return matcher.group()
+		} else {
+			log.warn("Could not parse IP string '$ips' from $entry.entry, falling back to 127.0.0.1")
+			return '127.0.0.1'
+		}
 	}
 
 	private static String extractUrl(String entry) {

@@ -1,0 +1,74 @@
+{
+  "request": {
+    "properties": {
+      "generationTimestamp": {
+        "type": "date",
+        "index": "not_analyzed"
+      },
+      "requestIp": {
+        "type": "ip",
+        "index": "not_analyzed"
+      },
+      "groupId": {
+        "type": "string",
+        "analyzer": "packagename"
+      },
+      "artifactId": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "packageName": {
+        "type": "string",
+        "analyzer": "packagename"
+      },
+      "bootVersion": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "javaVersion": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "language": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "packaging": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "type": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "dependencies": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "invalid": {
+        "type": "boolean",
+        "index": "not_analyzed"
+      },
+      "invalidJavaVersion": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "invalidLanguage": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "invalidPackaging": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "invalidType": {
+        "type": "string",
+        "index": "not_analyzed"
+      },
+      "invalidDependencies": {
+        "type": "string",
+        "index": "not_analyzed"
+      }
+    }
+  }
+}
