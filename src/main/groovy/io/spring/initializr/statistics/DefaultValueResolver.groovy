@@ -84,8 +84,17 @@ class DefaultValueResolver {
 		'jar'
 	}
 
-	String getDefaultType(LocalDateTime timestamp) {
-		'maven-project'
+	String getDefaultType(LocalDateTime timestamp, String url) {
+		if (!url) {
+			return 'maven-project'
+		}
+		if (url.startsWith('/build.gradle')) {
+			return 'gradle-build'
+		}
+		if (url.startsWith('/pom.xml')) {
+			return 'maven-build'
+		}
+		return 'maven-project'
 	}
 
 }

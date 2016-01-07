@@ -3,6 +3,8 @@ package io.spring.initializr.statistics.elastic
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 import groovy.util.logging.Slf4j
 import io.spring.initializr.metadata.InitializrMetadataProvider
@@ -10,9 +12,6 @@ import io.spring.initializr.statistics.DefaultValueResolver
 
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.web.util.UriComponentsBuilder
-
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 /**
  *
@@ -23,10 +22,11 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 
 	static final String X_FORWARDED_FOR = 'x_forwarded_for:"'
 	static final IP_PATTERN = Pattern.compile("[0-9]*\\.[0-9]*\\.[0-9]*\\.[0-9]*")
-	static final String GET_STARTER = 'GET /starter.zip'
-	static final String GET_POM = 'GET /pom.xml'
-	static final String GET_GRADLE_BUILD = 'GET /build.gradle'
-	static final String POST_STARTER_TGZ = 'POST /starter.tgz'
+
+	static final List<String> KNOWN_PREFIXES = ['GET /starter.zip', 'POST /starter.zip',
+												'GET /starter.tgz', 'POST /starter.tgz',
+												'GET /pom.xml', 'POST /pom.xml',
+												'GET /build.gradle', 'POST /build.gradle']
 
 	private final DefaultValueResolver valueResolver
 	private final InitializrMetadataProvider metadataProvider
@@ -105,7 +105,7 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 			document.invalidType = true
 			log.warn("Invalid type '$type' from $logEntry.entry")
 		}
-		document.type = type ?: valueResolver.getDefaultType(timestamp)
+		document.type = type ?: valueResolver.getDefaultType(timestamp, url)
 
 
 		def dependencies = []
@@ -142,26 +142,19 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 		// only matches IPv4 addresses
 		String ips = entry.substring(start, end)
 		Matcher matcher = IP_PATTERN.matcher(ips)
-		if(matcher.find()) {
+		if (matcher.find()) {
 			return matcher.group()
 		} else {
-			log.warn("Could not parse IP string '$ips' from $entry.entry, falling back to 127.0.0.1")
+			log.warn("Could not parse IP string '$ips' from $entry, falling back to 127.0.0.1")
 			return '127.0.0.1'
 		}
 	}
 
 	private static String extractUrl(String entry) {
-		if (entry.contains(GET_STARTER)) {
-			return extractUrl(entry, GET_STARTER)
-		}
-		if (entry.contains(GET_POM)) {
-			return extractUrl(entry, GET_POM)
-		}
-		if (entry.contains(GET_GRADLE_BUILD)) {
-			return extractUrl(entry, GET_GRADLE_BUILD)
-		}
-		if (entry.contains(POST_STARTER_TGZ)) {
-			return extractUrl(entry, POST_STARTER_TGZ)
+		for (String prefix : KNOWN_PREFIXES) {
+			if (entry.contains(prefix)) {
+				return extractUrl(entry, prefix)
+			}
 		}
 		return null
 	}
@@ -179,7 +172,7 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 		if (url.endsWith(' HTTP/1.1')) {
 			url = url.substring(0, url.length() - ' HTTP/1.1'.length())
 		}
-		return url
+		return url.trim()
 	}
 
 }

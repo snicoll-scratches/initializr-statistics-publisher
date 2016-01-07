@@ -20,7 +20,7 @@ class ImportStatisticsItemProcessorTest extends AbstractElasticTest {
 			new DefaultValueResolver(), provider)
 
 	@Test
-	void parSimpleLog() {
+	void parseGetZip() {
 		def document = process('2015-12-29T00:00:21Z',
 				'start.spring.io - [29/12/2015:00:00:21 +0000] "GET /starter.zip?name=demo&groupId=com.example&artifactId=demo&version=0.0.1-SNAPSHOT&description=Demo+project+for+Spring+Boot&packageName=com.example&type=maven-project&packaging=jar&javaVersion=1.8&language=java&bootVersion=1.3.1.RELEASE&dependencies=web HTTP/1.1" 200 0 51235 "-" "Java/1.8.0_65" 10.10.66.39:49859 x_forwarded_for:"2.177.163.44, 162.158.88.109" x_forwarded_proto:"http" vcap_request_id:5596f056-aad8-4e4e-622b-613acd701559 response_time:0.09861743 app_id:b017e0be-2460-49fe-b986-7377eb773926')
 
@@ -34,6 +34,40 @@ class ImportStatisticsItemProcessorTest extends AbstractElasticTest {
 		assertEquals 'jar', document.packaging
 		assertEquals 'maven-project', document.type
 		assertEquals(['web'], document.dependencies)
+	}
+
+	@Test
+	void parsePostZip() {
+		def document = process('2015-09-28T15:27:21Z',
+				'start.spring.io - [28/09/2015:00:27:46 +0000] "POST /starter.zip HTTP/1.1" 200 579 4645 "-" "curl/7.43.0" 10.10.66.126:2550 x_forwarded_for:"199.244.214.109, 198.41.235.215" x_forwarded_proto:"http" vcap_request_id:00b7980f-26c8-4189-52f4-11d5394a6c7f response_time:0.095639708 app_id:b017e0be-2460-49fe-b986-7377eb773926')
+
+		assertEquals '199.244.214.109', document.requestIp
+		assertEquals 'com.example', document.groupId
+		assertEquals 'demo', document.artifactId
+		assertEquals 'com.example', document.packageName
+		assertEquals '1.2.6.RELEASE', document.bootVersion
+		assertEquals '1.8', document.javaVersion
+		assertEquals 'java', document.language
+		assertEquals 'jar', document.packaging
+		assertEquals 'maven-project', document.type
+		assertEquals([], document.dependencies)
+	}
+
+	@Test
+	void parseGetTgz() {
+		def document = process('2015-12-29T15:02:28Z',
+				'start.spring.io - [29/12/2015:02:28:00 +0000] "GET /starter.tgz HTTP/1.1" 200 0 49852 "-" "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:43.0) Gecko/20100101 Firefox/43.0" 10.10.66.39:56016 x_forwarded_for:"58.58.40.171, 173.245.48.116" x_forwarded_proto:"https" vcap_request_id:1462e2c1-7214-43c0-6866-7c090624e2aa response_time:0.086642637 app_id:b017e0be-2460-49fe-b986-7377eb773926')
+
+		assertEquals '58.58.40.171', document.requestIp
+		assertEquals 'com.example', document.groupId
+		assertEquals 'demo', document.artifactId
+		assertEquals 'com.example', document.packageName
+		assertEquals '1.3.1.RELEASE', document.bootVersion
+		assertEquals '1.8', document.javaVersion
+		assertEquals 'java', document.language
+		assertEquals 'jar', document.packaging
+		assertEquals 'maven-project', document.type
+		assertEquals([], document.dependencies)
 	}
 
 	@Test
@@ -85,6 +119,22 @@ class ImportStatisticsItemProcessorTest extends AbstractElasticTest {
 		assertEquals 'jar', document.packaging
 		assertEquals 'gradle-build', document.type
 		assertDependencies(['h2', 'data-rest'], document.dependencies)
+	}
+
+	@Test
+	void parsePostGradleBuild() {
+		def document = process('2015-12-29T07:51:40Z',
+				'start.spring.io - [29/12/2015:07:51:40 +0000] "POST /build.gradle HTTP/1.1" 200 50 1078 "-" "curl/7.35.0" 10.10.2.247:40487 x_forwarded_for:"83.246.129.154, 162.158.88.103" x_forwarded_proto:"http" vcap_request_id:a897606a-bffa-4f53-452c-134b70826953 response_time:0.035422422 app_id:b017e0be-2460-49fe-b986-7377eb773926')
+		assertEquals '83.246.129.154', document.requestIp
+		assertEquals 'com.example', document.groupId
+		assertEquals 'demo', document.artifactId
+		assertEquals 'com.example', document.packageName
+		assertEquals '1.3.1.RELEASE', document.bootVersion
+		assertEquals '1.8', document.javaVersion
+		assertEquals 'java', document.language
+		assertEquals 'jar', document.packaging
+		assertEquals 'gradle-build', document.type
+		assertEquals([], document.dependencies)
 	}
 
 	@Test

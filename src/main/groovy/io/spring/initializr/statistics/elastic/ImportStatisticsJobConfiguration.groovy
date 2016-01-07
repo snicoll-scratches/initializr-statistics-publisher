@@ -86,6 +86,7 @@ class ImportStatisticsJobConfiguration {
 				.retry(SocketException).retry(ResourceAccessException)
 				.reader(reader)
 				.processor(processor())
+				.listener(new RejectedEntryListener())
 				.writer(writer())
 				.build();
 	}
