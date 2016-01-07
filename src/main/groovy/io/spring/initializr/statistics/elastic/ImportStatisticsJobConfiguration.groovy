@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.Resource
 import org.springframework.core.task.SimpleAsyncTaskExecutor
 import org.springframework.validation.BindException
+import org.springframework.web.client.ResourceAccessException
 
 /**
  *
@@ -72,7 +73,7 @@ class ImportStatisticsJobConfiguration {
 		return stepBuilder.get("partitionStep")
 				.partitioner("step1", partitioner())
 				.partitionHandler(partitionHandler)
-				.gridSize(16)
+				.gridSize(12)
 				.build();
 	}
 
@@ -80,6 +81,9 @@ class ImportStatisticsJobConfiguration {
 	public Step step1(ItemReader<LogEntry> reader) {
 		return stepBuilder.get("step1")
 				.<LogEntry, ProjectRequestDocument> chunk(10)
+				.faultTolerant()
+				.retryLimit(3)
+				.retry(SocketException).retry(ResourceAccessException)
 				.reader(reader)
 				.processor(processor())
 				.writer(writer())
@@ -100,7 +104,6 @@ class ImportStatisticsJobConfiguration {
 	@StepScope
 	FlatFileItemReader<LogEntry> reader(@Value("#{stepExecutionContext['fileName']}") Resource resource) {
 		def reader = new FlatFileItemReader<LogEntry>()
-
 
 		def mapper = new DefaultLineMapper<LogEntry>()
 		mapper.setLineTokenizer(new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB))
