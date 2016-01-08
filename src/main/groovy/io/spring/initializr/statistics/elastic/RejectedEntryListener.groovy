@@ -18,8 +18,8 @@ class RejectedEntryListener implements ItemProcessListener<LogEntry, ProjectRequ
 									'GET /favicon.ico', 'GET /robots.txt', 'GET /apple', 'GET /?utm',
 									'GET /js', 'GET /img', 'GET /fonts', 'GET /css',
 									'GET /sts',
-									'GET /info', 'GET /metrics', 'GET /autoconfig', 'GET /dump',
-									'GET /mappings', 'GET /trace', 'GET /beans', 'GET /env',
+									'GET /info', 'GET /health', 'GET /metrics', 'GET /autoconfig',
+									'GET /dump', 'GET /mappings', 'GET /trace', 'GET /beans', 'GET /env',
 									'GET /configprops', 'GET /error']
 
 	@Override

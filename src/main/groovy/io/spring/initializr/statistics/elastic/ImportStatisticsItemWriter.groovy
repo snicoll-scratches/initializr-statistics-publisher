@@ -1,8 +1,6 @@
 package io.spring.initializr.statistics.elastic
 
 import org.springframework.batch.item.ItemWriter
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 
 /**

@@ -26,7 +26,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.Resource
-import org.springframework.core.task.SimpleAsyncTaskExecutor
+import org.springframework.core.task.TaskExecutor
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.validation.BindException
 import org.springframework.web.client.ResourceAccessException
 
@@ -65,7 +66,7 @@ class ImportStatisticsJobConfiguration {
 	public Step partitionStep(ItemReader<LogEntry> reader) {
 		TaskExecutorPartitionHandler partitionHandler = new TaskExecutorPartitionHandler();
 
-		partitionHandler.setTaskExecutor(new SimpleAsyncTaskExecutor());
+		partitionHandler.setTaskExecutor(myTaskExecutor());
 		partitionHandler.setStep(step1(reader));
 
 		partitionHandler.afterPropertiesSet();
@@ -73,7 +74,7 @@ class ImportStatisticsJobConfiguration {
 		return stepBuilder.get("partitionStep")
 				.partitioner("step1", partitioner())
 				.partitionHandler(partitionHandler)
-				.gridSize(12)
+				.gridSize(1)
 				.build();
 	}
 
@@ -131,6 +132,13 @@ class ImportStatisticsJobConfiguration {
 	@Bean
 	ItemWriter<ProjectRequestDocument> writer() {
 		new ImportStatisticsItemWriter(documentSerializer)
+	}
+
+	@Bean
+	TaskExecutor myTaskExecutor() {
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor()
+		executor.setCorePoolSize(1)
+		executor
 	}
 
 }
