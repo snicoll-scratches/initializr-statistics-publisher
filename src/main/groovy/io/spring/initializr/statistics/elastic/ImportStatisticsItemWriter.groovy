@@ -4,15 +4,18 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.web.client.RestTemplate
 
 /**
+ * Post {@link ProjectRequestDocument} to an elastic search instance
  *
  * @author Stephane Nicoll
  */
 class ImportStatisticsItemWriter implements ItemWriter<ProjectRequestDocument> {
 
+	private final String entityUrl
 	private final ProjectRequestDocumentSerializer serializer
 	private final RestTemplate restTemplate
 
-	ImportStatisticsItemWriter(ProjectRequestDocumentSerializer serializer) {
+	ImportStatisticsItemWriter(ImportStatisticsJobProperties properties, ProjectRequestDocumentSerializer serializer) {
+		this.entityUrl = properties.job.entityUrl
 		this.serializer = serializer
 		this.restTemplate = new RestTemplate()
 	}
@@ -21,7 +24,7 @@ class ImportStatisticsItemWriter implements ItemWriter<ProjectRequestDocument> {
 	void write(List<? extends ProjectRequestDocument> list) throws Exception {
 		list.each {
 			String json = serializer.toJson(it)
-			restTemplate.postForObject('http://localhost:9200/initializr/request', json, String)
+			restTemplate.postForObject(this.entityUrl, json, String)
 		}
 
 	}

@@ -131,7 +131,7 @@ class ImportStatisticsJobConfiguration {
 
 	@Bean
 	ItemWriter<ProjectRequestDocument> writer() {
-		new ImportStatisticsItemWriter(documentSerializer)
+		new ImportStatisticsItemWriter(properties, documentSerializer)
 	}
 
 	@Bean

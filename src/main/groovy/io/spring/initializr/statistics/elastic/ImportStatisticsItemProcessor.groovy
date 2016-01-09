@@ -14,6 +14,8 @@ import org.springframework.batch.item.ItemProcessor
 import org.springframework.web.util.UriComponentsBuilder
 
 /**
+ * Process a {@link LogEntry} and generate a {@link ProjectRequestDocument} if a
+ * project request is found.
  *
  * @author Stephane Nicoll
  */
