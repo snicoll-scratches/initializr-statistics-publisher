@@ -147,8 +147,8 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 		if (matcher.find()) {
 			return matcher.group()
 		} else {
-			log.warn("Could not parse IP string '$ips' from $entry, falling back to 127.0.0.1")
-			return '127.0.0.1'
+			log.warn("Could not parse IP string '$ips' from $entry")
+			return null
 		}
 	}
 

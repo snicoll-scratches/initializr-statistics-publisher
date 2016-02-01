@@ -1,5 +1,6 @@
 package io.spring.initializr.statistics.elastic
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.spring.initializr.metadata.InitializrMetadataProvider
 
@@ -27,7 +28,9 @@ class ProjectRequestDocumentSerializer {
 	}
 
 	private static ObjectMapper createObjectMapper() {
-		new ObjectMapper()
+		def mapper = new ObjectMapper()
+		mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+		mapper
 	}
 
 }

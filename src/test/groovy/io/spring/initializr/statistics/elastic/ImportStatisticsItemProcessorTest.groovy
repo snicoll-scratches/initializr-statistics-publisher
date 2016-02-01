@@ -173,7 +173,7 @@ class ImportStatisticsItemProcessorTest extends AbstractElasticTest {
 	}
 
 	@Test
-	void parseUnknownIpAddress() {
+	void parseIpAddress() {
 		def document = process('2015-12-29T01:12:33Z',
 				'start.spring.io - [29/12/2015:01:12:33 +0000] GET /starter.zip?name=mhts-poc&groupId=ogis&artifactId=ogis.poc&version=0.0.1-SNAPSHOT&description=Demo+project+for+Spring+Boot&packageName=jp.co.ogis&type=gradle-project&packaging=jar&javaVersion=1.7&language=java&bootVersion=1.3.0.RELEASE&dependencies=h2 HTTP/1.1" 200 0 54713 "-" "Java/1.7.0_79" 10.10.66.30:12630 x_forwarded_for:"unknown,158.201.127.1, 103.22.200.157" x_forwarded_proto:"http" vcap_request_id:4dd1dbc8-99fc-4a83-59a0-70ea5470b6be response_time:0.087656439 app_id:b017e0be-2460-49fe-b986-7377eb773926')
 
