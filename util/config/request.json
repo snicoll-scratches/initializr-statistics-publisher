@@ -68,6 +68,10 @@
       "invalidDependencies": {
         "type": "string",
         "index": "not_analyzed"
+      },
+      "errorMessage": {
+        "type": "string",
+        "index": "not_analyzed"
       }
     }
   }
