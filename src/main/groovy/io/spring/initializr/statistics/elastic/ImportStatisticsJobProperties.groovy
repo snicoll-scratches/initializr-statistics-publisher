@@ -16,6 +16,10 @@ class ImportStatisticsJobProperties {
 
 		String entityUrl = 'http://localhost:9200/initializr/request'
 
+		String username
+
+		String password
+
 		Resource[] input = []
 
 	}

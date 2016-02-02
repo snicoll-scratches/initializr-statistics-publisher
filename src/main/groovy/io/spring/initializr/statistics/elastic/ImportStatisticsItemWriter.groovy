@@ -17,7 +17,7 @@ class ImportStatisticsItemWriter implements ItemWriter<ProjectRequestDocument> {
 	ImportStatisticsItemWriter(ImportStatisticsJobProperties properties, ProjectRequestDocumentSerializer serializer) {
 		this.entityUrl = properties.job.entityUrl
 		this.serializer = serializer
-		this.restTemplate = new RestTemplate()
+		this.restTemplate = new BasicAuthRestTemplate(properties.job.username, properties.job.password)
 	}
 
 	@Override
