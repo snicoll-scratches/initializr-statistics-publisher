@@ -14,11 +14,15 @@ class ImportStatisticsJobProperties {
 
 	static class Job {
 
-		String entityUrl = 'http://localhost:9200/initializr/request'
+		String url = 'http://localhost:9200'
 
 		String username
 
 		String password
+
+		String indexName = 'initializr'
+
+		String entityName = 'request'
 
 		Resource[] input = []
 

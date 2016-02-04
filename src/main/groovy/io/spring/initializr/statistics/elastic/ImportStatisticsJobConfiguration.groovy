@@ -81,7 +81,7 @@ class ImportStatisticsJobConfiguration {
 	@Bean
 	public Step step1(ItemReader<LogEntry> reader) {
 		return stepBuilder.get("step1")
-				.<LogEntry, ProjectRequestDocument> chunk(10)
+				.<LogEntry, ProjectRequestDocument> chunk(100)
 				.faultTolerant()
 				.retryLimit(3)
 				.retry(SocketException).retry(ResourceAccessException)
@@ -131,7 +131,7 @@ class ImportStatisticsJobConfiguration {
 
 	@Bean
 	ItemWriter<ProjectRequestDocument> writer() {
-		new ImportStatisticsItemWriter(properties, documentSerializer)
+		new ImportStatisticsItemWriter(properties)
 	}
 
 	@Bean
