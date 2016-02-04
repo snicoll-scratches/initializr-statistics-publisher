@@ -9,6 +9,14 @@
         "type": "ip",
         "index": "not_analyzed"
       },
+      "clientId": {
+        "type": "string",
+        "analyzer": "packagename"
+      },
+      "clientVersion": {
+        "type": "string",
+        "analyzer": "packagename"
+      },
       "groupId": {
         "type": "string",
         "analyzer": "packagename"
