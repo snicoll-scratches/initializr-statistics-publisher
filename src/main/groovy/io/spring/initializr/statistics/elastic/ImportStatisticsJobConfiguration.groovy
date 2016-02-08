@@ -81,7 +81,7 @@ class ImportStatisticsJobConfiguration {
 	@Bean
 	public Step step1(ItemReader<LogEntry> reader) {
 		return stepBuilder.get("step1")
-				.<LogEntry, ProjectRequestDocument> chunk(100)
+				.<LogEntry, ProjectRequestDocument> chunk(5000)
 				.faultTolerant()
 				.retryLimit(3)
 				.retry(SocketException).retry(ResourceAccessException)
