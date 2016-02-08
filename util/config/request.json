@@ -19,11 +19,11 @@
       },
       "clientId": {
         "type": "string",
-        "analyzer": "not_analyzed"
+        "index": "not_analyzed"
       },
       "clientVersion": {
         "type": "string",
-        "analyzer": "not_analyzed"
+        "index": "not_analyzed"
       },
       "groupId": {
         "type": "string",
