@@ -10,7 +10,10 @@ import groovy.transform.ToString
 class ProjectRequestDocument {
 
 	long generationTimestamp
+
 	String requestIp
+	String requestIpv4
+
 	String groupId
 	String artifactId
 	String packageName

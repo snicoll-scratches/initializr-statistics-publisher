@@ -68,7 +68,10 @@ class ImportStatisticsItemProcessor implements ItemProcessor<LogEntry, ProjectRe
 		LocalDateTime timestamp = LocalDateTime.parse(
 				logEntry.timestamp, DateTimeFormatter.ISO_DATE_TIME)
 		document.generationTimestamp = timestamp.toInstant(ZoneOffset.UTC).toEpochMilli()
-		document.requestIp = extractRequestIp(logEntry.entry)
+
+		def ip = extractRequestIp(logEntry.entry)
+		document.requestIp = ip
+		document.requestIpv4 = ip
 		def builder = UriComponentsBuilder.fromUriString(url).build()
 		def params = builder.getQueryParams()
 
