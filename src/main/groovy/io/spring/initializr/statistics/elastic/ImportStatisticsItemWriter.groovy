@@ -28,12 +28,7 @@ class ImportStatisticsItemWriter implements ItemWriter<ProjectRequestDocument> {
 
 	@Override
 	void write(List<? extends ProjectRequestDocument> list) throws Exception {
-		if (list.isEmpty()) {
-			log.debug("No document to process")
-			return
-		}
-
-		log.debug("About to inject " + list.size() + " document(s)")
+		log.info("About to inject " + list.size() + " document(s)")
 		Bulk.Builder bulk = new Bulk.Builder()
 				.defaultIndex(properties.indexName)
 				.defaultType(properties.entityName)
