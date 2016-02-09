@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.Resource
 import org.springframework.core.task.TaskExecutor
+import org.springframework.retry.backoff.ExponentialBackOffPolicy
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.validation.BindException
 import org.springframework.web.client.ResourceAccessException
@@ -83,7 +84,8 @@ class ImportStatisticsJobConfiguration {
 		return stepBuilder.get("step1")
 				.<LogEntry, ProjectRequestDocument> chunk(5000)
 				.faultTolerant()
-				.retryLimit(3)
+				.retryLimit(5)
+				.backOffPolicy(new ExponentialBackOffPolicy(initialInterval: 1000, multiplier: 2))
 				.retry(IOException).retry(ResourceAccessException).retry(InterruptedIOException)
 				.reader(reader)
 				.processor(processor())
