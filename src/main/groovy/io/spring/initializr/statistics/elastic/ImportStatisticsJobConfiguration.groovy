@@ -84,7 +84,7 @@ class ImportStatisticsJobConfiguration {
 				.<LogEntry, ProjectRequestDocument> chunk(5000)
 				.faultTolerant()
 				.retryLimit(3)
-				.retry(IOException).retry(ResourceAccessException)
+				.retry(IOException).retry(ResourceAccessException).retry(InterruptedIOException)
 				.reader(reader)
 				.processor(processor())
 				.listener(new RejectedEntryListener())
